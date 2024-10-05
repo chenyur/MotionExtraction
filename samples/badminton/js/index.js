@@ -77,6 +77,7 @@ let upper = null;
 let kernel = null;
 let hsv = null;
 let cny = null;
+let red = null;
 
 function startVideoProcessing() {
   if (!streaming) { console.warn("Please startup your webcam"); return; }
@@ -108,6 +109,8 @@ function startVideoProcessing() {
   kernel = cv.Mat.ones(5, 5, cv.CV_8U);
   hsv = new cv.Mat();
 
+  red = new cv.Mat(video.height, video.width, cv.CV_8UC4, [255, 0, 0, 255]);
+
   requestAnimationFrame(processVideo);
 }
 
@@ -116,19 +119,22 @@ function processVideo() {
 
   cap.read(frame);
 
+  // extract green court and dilate
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
   cv.inRange(hsv, lower, upper, mask);
   cv.dilate(mask, mask, kernel);
+
+  // overlay detected green court over grayscaled background
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
+  cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
+  frame.copyTo(dst, mask);
+
+  // edge detect court lines only on green part
   cv.Canny(gry, cny, 50, 200, 3);
   cv.bitwise_and(cny, mask, cny);
-  
-  // Convert grayscale to RGBA
-  cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
+  red.copyTo(dst, cny);
 
-  frame.copyTo(dst, mask);
-  
-  cv.imshow('canvasOutput', cny);
+  cv.imshow('canvasOutput', dst);  // Changed from cny to dst
 
   stats.end();
   requestAnimationFrame(processVideo);
