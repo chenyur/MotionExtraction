@@ -45,7 +45,7 @@ function startCamera() {
 
        // Update the camera resolution display
        document.getElementById("cameraResolution").textContent = `${width} x ${height}`;
-       
+
       streaming = true;
       vc = new cv.VideoCapture(video);
     }
@@ -76,6 +76,29 @@ function passThrough(src) {
 function gray(src) {
   cv.cvtColor(src, dstC1, cv.COLOR_RGBA2GRAY);
   return dstC1;
+}
+
+function invertColors(src) {
+// Log the type and dimensions of the source matrix
+console.log('Source type:', src.type(), 'Dimensions:', src.cols, 'x', src.rows);
+
+// Check if src has 4 channels (RGBA), if not, convert it to RGBA
+if (src.type() !== cv.CV_8UC4) {
+  cv.cvtColor(src, dstC4, cv.COLOR_RGB2RGBA);  // Convert to RGBA if needed
+} else {
+  src.copyTo(dstC4);  // Copy directly if already RGBA
+}
+
+// Log the type and dimensions of the destination matrix before applying bitwise_not
+console.log('Destination type (before invert):', dstC4.type(), 'Dimensions:', dstC4.cols, 'x', dstC4.rows);
+
+// Apply the bitwise_not operation to invert colors
+cv.bitwise_not(dstC4, dstC4);
+
+// Log the destination matrix type after the operation
+console.log('Destination type (after invert):', dstC4.type(), 'Dimensions:', dstC4.cols, 'x', dstC4.rows);
+
+return dstC4;
 }
 
 function hsv(src) {
@@ -295,9 +318,21 @@ function processVideo() {
     case 'erosion': result = erosion(src); break;
     case 'dilation': result = dilation(src); break;
     case 'morphology': result = morphology(src); break;
+    case 'invertColors': result = invertColors(src); break;
     default: result = passThrough(src);
   }
-  cv.imshow("canvasOutput", result);
+
+   // Check if result is a valid cv.Mat instance
+   console.log('Result type:', result.type(), 'Dimensions:', result.cols, 'x', result.rows);
+  
+   // Ensure result is valid before displaying
+   if (result != null && !result.isDeleted()) {
+     cv.imshow("canvasOutput", result);
+   } else {
+     console.error('Result is not a valid cv.Mat instance.');
+   }
+
+
   stats.end();
   lastFilter = controls.filter;
   requestAnimationFrame(processVideo);
@@ -324,6 +359,7 @@ var stats = null;
 
 var filters = {
   'passThrough': 'Pass Through',
+  'invertColors': 'Invert Colors',
   'gray': 'Gray',
   'hsv': 'HSV',
   'canny': 'Canny Edge Detection',
@@ -366,6 +402,7 @@ function initUI() {
     inRange: function() { this.setFilter('inRange'); },
     inRangeLow: 75,
     inRangeHigh: 150,
+    invertColors: function() { this.setFilter('invertColors'); },
     threshold: function() { this.setFilter('threshold'); },
     thresholdValue: 100,
     adaptiveThreshold: function() { this.setFilter('adaptiveThreshold'); },
@@ -415,6 +452,10 @@ function initUI() {
   }
 
   let passThrough = gui.add(controls, 'passThrough').name(filters['passThrough']).onChange(function() {
+    closeLastFolder(null);
+  });
+
+  let invertColors = gui.add(controls, 'invertColors').name(filters['invertColors']).onChange(function() {
     closeLastFolder(null);
   });
   
