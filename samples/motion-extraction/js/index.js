@@ -5,7 +5,7 @@ let qvga = {width: {exact: 320}, height: {exact: 240}};
 
 let vga = {width: {exact: 640}, height: {exact: 480}};
 
-let fhd = {width: {exact: 1920}, height: {exact: 1080}};
+let fhd = {width: {ideal: 1920}, height: {ideal: 1080}};
 
 
 
@@ -42,6 +42,10 @@ function startCamera() {
       width = video.videoWidth;
       video.setAttribute("width", width);
       video.setAttribute("height", height);
+
+       // Update the camera resolution display
+       document.getElementById("cameraResolution").textContent = `${width} x ${height}`;
+       
       streaming = true;
       vc = new cv.VideoCapture(video);
     }
