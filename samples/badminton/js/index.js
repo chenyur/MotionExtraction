@@ -72,6 +72,11 @@ let frame = null;
 let mask = null;
 let fgbg = null;
 
+let lower = null;
+let upper = null;
+let kernel = null;
+let hsv = null;
+
 function startVideoProcessing() {
   if (!streaming) { console.warn("Please startup your webcam"); return; }
   stopVideoProcessing();
@@ -95,6 +100,12 @@ function startVideoProcessing() {
   gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
+  // Define range for green color in HSV
+  lower = new cv.Mat(video.height, video.width, cv.CV_8UC3, [35, 50, 50, 0]);
+  upper = new cv.Mat(video.height, video.width, cv.CV_8UC3, [85, 255, 255, 255]);
+  kernel = cv.Mat.ones(5, 5, cv.CV_8U);
+  hsv = new cv.Mat();
+
   requestAnimationFrame(processVideo);
 }
 
@@ -103,42 +114,21 @@ function processVideo() {
 
   cap.read(frame);
 
-  // Create a new Mat to store the HSV image
-  let hsv = new cv.Mat();
-  // Convert frame from BGR to HSV color space
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
 
-  // Define range for green color in HSV
-  let lower = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [35, 50, 50, 0]);
-  let upper = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [85, 255, 255, 255]);
-
-  // Create mask for green color
   cv.inRange(hsv, lower, upper, mask);
 
-  // Optional: Apply morphological operations to remove noise
-  let kernel = cv.Mat.ones(5, 5, cv.CV_8U);
   cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
-  cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
 
-  // Convert frame to grayscale
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
   
-  // Make the grayscale image darker
   cv.convertScaleAbs(gry, gry, 0.5, 0);
   
-  // Convert grayscale to RGBA
   cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
 
-  // Copy the original frame to dst only where the mask is non-zero
   frame.copyTo(dst, mask);
   
   cv.imshow('canvasOutput', dst);
-
-  // Clean up
-  hsv.delete();
-  lower.delete();
-  upper.delete();
-  kernel.delete();
 
   stats.end();
   requestAnimationFrame(processVideo);
