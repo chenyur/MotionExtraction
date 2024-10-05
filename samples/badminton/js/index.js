@@ -118,7 +118,7 @@ function processVideo() {
 
   cv.inRange(hsv, lower, upper, mask);
 
-  cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
+  cv.dilate(mask, mask, kernel);
 
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
   
