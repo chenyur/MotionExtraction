@@ -5,7 +5,14 @@ let qvga = {width: {exact: 320}, height: {exact: 240}};
 
 let vga = {width: {exact: 640}, height: {exact: 480}};
 
-let resolution = window.innerWidth < 640 ? qvga : vga;
+let fhd = {width: {exact: 1920}, height: {exact: 1080}};
+
+
+
+
+//let resolution = window.innerWidth < 640 ? qvga : vga;
+
+let resolution = fhd;  
 
 // whether streaming video from the camera.
 let streaming = false;
