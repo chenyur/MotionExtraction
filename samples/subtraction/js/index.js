@@ -49,7 +49,9 @@ let canvasBuffer = null;
 let canvasBufferCtx = null;
 
 let src = null;
+let gry = null;
 let dst = null;
+
 let cap = null;
 
 let frame = null;
@@ -74,7 +76,9 @@ function startVideoProcessing() {
   frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
   fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
 
-  fgbg = new cv.BackgroundSubtractorMOG2(100, 16, true);
+  fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
+
+  gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
   requestAnimationFrame(processVideo);
@@ -86,9 +90,18 @@ function processVideo() {
   cap.read(frame);
   fgbg.apply(frame, fgmask);
 
-  // cv.cvtColor(frame, dst, cv.COLOR_RGBA2GRAY, 0);
+  // Apply morphological opening to remove noise
+  let kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+  cv.morphologyEx(fgmask, fgmask, cv.MORPH_OPEN, kernel);
+  kernel.delete();
 
-  cv.imshow('canvasOutput', fgmask);
+  // Apply Gaussian blur to the foreground mask
+  cv.GaussianBlur(fgmask, fgmask, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+
+  // Clear dst before copying
+  dst.setTo([0, 0, 0, 255]);
+  frame.copyTo(dst, fgmask);
+  cv.imshow('canvasOutput', dst);
 
   stats.end();
   requestAnimationFrame(processVideo);
