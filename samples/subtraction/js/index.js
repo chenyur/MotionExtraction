@@ -101,6 +101,9 @@ function processVideo() {
   // Convert frame to grayscale
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
   
+  // Make the grayscale image darker
+  cv.convertScaleAbs(gry, gry, 0.2, 0); // Scale by 0.5 to make it darker
+  
   // Convert grayscale to RGBA
   cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
 
