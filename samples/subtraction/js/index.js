@@ -18,15 +18,28 @@ let info = document.getElementById('info');
 
 function startCamera() {
   if (streaming) return;
-  navigator.mediaDevices.getUserMedia({video: resolution, audio: false})
+  navigator.mediaDevices.enumerateDevices()
+    .then(function(devices) {
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      if (videoDevices.length < 2) {
+        throw new Error('Second camera not found');
+      }
+      return navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: { exact: videoDevices[1].deviceId },
+          ...resolution
+        },
+        audio: false
+      });
+    })
     .then(function(s) {
-    stream = s;
-    video.srcObject = s;
-    video.play();
-  })
+      stream = s;
+      video.srcObject = s;
+      video.play();
+    })
     .catch(function(err) {
-    console.log("An error occured! " + err);
-  });
+      console.log("An error occurred! " + err);
+    });
 
   video.addEventListener("canplay", function(ev){
     if (!streaming) {
