@@ -69,7 +69,7 @@ let dst = null;
 let cap = null;
 
 let frame = null;
-let fgmask = null;
+let mask = null;
 let fgbg = null;
 
 function startVideoProcessing() {
@@ -88,7 +88,7 @@ function startVideoProcessing() {
   cap = new cv.VideoCapture(video);
 
   frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-  fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+  mask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
 
   fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
 
@@ -103,19 +103,42 @@ function processVideo() {
 
   cap.read(frame);
 
+  // Create a new Mat to store the HSV image
+  let hsv = new cv.Mat();
+  // Convert frame from BGR to HSV color space
+  cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
+
+  // Define range for green color in HSV
+  let lower = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [35, 50, 50, 0]);
+  let upper = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [85, 255, 255, 255]);
+
+  // Create mask for green color
+  cv.inRange(hsv, lower, upper, mask);
+
+  // Optional: Apply morphological operations to remove noise
+  let kernel = cv.Mat.ones(5, 5, cv.CV_8U);
+  cv.morphologyEx(mask, mask, cv.MORPH_OPEN, kernel);
+  cv.morphologyEx(mask, mask, cv.MORPH_CLOSE, kernel);
+
   // Convert frame to grayscale
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
   
   // Make the grayscale image darker
-  cv.convertScaleAbs(gry, gry, 0.5, 0); // Scale by 0.5 to make it darker
+  cv.convertScaleAbs(gry, gry, 0.5, 0);
   
   // Convert grayscale to RGBA
   cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
 
   // Copy the original frame to dst only where the mask is non-zero
-  frame.copyTo(dst);
+  frame.copyTo(dst, mask);
   
-  cv.imshow('canvasOutput', gry);
+  cv.imshow('canvasOutput', dst);
+
+  // Clean up
+  hsv.delete();
+  lower.delete();
+  upper.delete();
+  kernel.delete();
 
   stats.end();
   requestAnimationFrame(processVideo);
