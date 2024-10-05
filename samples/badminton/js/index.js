@@ -4,9 +4,7 @@ let qvga = {width: {exact: 320}, height: {exact: 240}};
 
 let vga = {width: {exact: 640}, height: {exact: 480}};
 
-let fhd = {width: {ideal: 1920}, height: {ideal: 1080}};
-
-let resolution = fhd;
+let resolution = vga;
 
 //let resolution = window.innerWidth < 640 ? qvga : vga;
 
