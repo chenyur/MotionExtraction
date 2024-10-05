@@ -92,7 +92,10 @@ function startVideoProcessing() {
   frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
   fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
 
-  fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
+  //fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
+  
+  //Further optimize performace by reducing history size, lowering sensitivity and skipping shadow detection. 
+  fgbg = new cv.BackgroundSubtractorMOG2(200, 32, false);
 
   gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
