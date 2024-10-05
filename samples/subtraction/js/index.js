@@ -49,7 +49,9 @@ let canvasBuffer = null;
 let canvasBufferCtx = null;
 
 let src = null;
+let gry = null;
 let dst = null;
+
 let cap = null;
 
 let frame = null;
@@ -75,7 +77,9 @@ function startVideoProcessing() {
   fgmask = new cv.Mat(video.height, video.width, cv.CV_8UC1);
 
   fgbg = new cv.BackgroundSubtractorMOG2(100, 16, true);
-  dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+
+  gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+  dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
 
   requestAnimationFrame(processVideo);
 }
@@ -86,9 +90,9 @@ function processVideo() {
   cap.read(frame);
   fgbg.apply(frame, fgmask);
 
-  // cv.cvtColor(frame, dst, cv.COLOR_RGBA2GRAY, 0);
-
-  cv.imshow('canvasOutput', fgmask);
+  cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY, 0);
+  cv.add(gry, fgmask, dst);
+  cv.imshow('canvasOutput', dst);
 
   stats.end();
   requestAnimationFrame(processVideo);
