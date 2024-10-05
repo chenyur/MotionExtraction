@@ -76,6 +76,7 @@ let lower = null;
 let upper = null;
 let kernel = null;
 let hsv = null;
+let cny = null;
 
 function startVideoProcessing() {
   if (!streaming) { console.warn("Please startup your webcam"); return; }
@@ -98,6 +99,7 @@ function startVideoProcessing() {
   fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
 
   gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+  cny = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
   // Define range for green color in HSV
@@ -115,20 +117,18 @@ function processVideo() {
   cap.read(frame);
 
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
-
   cv.inRange(hsv, lower, upper, mask);
-
   cv.dilate(mask, mask, kernel);
-
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
+  cv.Canny(gry, cny, 50, 200, 3);
+  cv.bitwise_and(cny, mask, cny);
   
-  cv.convertScaleAbs(gry, gry, 0.5, 0);
-  
+  // Convert grayscale to RGBA
   cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
 
   frame.copyTo(dst, mask);
   
-  cv.imshow('canvasOutput', dst);
+  cv.imshow('canvasOutput', cny);
 
   stats.end();
   requestAnimationFrame(processVideo);
