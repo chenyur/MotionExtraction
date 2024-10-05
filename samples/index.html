@@ -5,7 +5,25 @@
   <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
   <link href="css/doxygen.css" rel="stylesheet" type="text/css" />
   <title>OpenCV.js demo with Motion Extraction</title>
+  <style>
+    .bottom-button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
 
+    .bottom-button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 
 <body>
@@ -48,6 +66,8 @@
     </ul>
   </div>
 </div>
+<!-- Button at the bottom center -->
+<button class="bottom-button" onclick="alert('Button Clicked!')">Click Me</button>
 <script>
 </script>
 </body>
