@@ -98,9 +98,15 @@ function processVideo() {
   // Apply Gaussian blur to the foreground mask
   cv.GaussianBlur(fgmask, fgmask, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
 
-  // Clear dst before copying
-  dst.setTo([0, 0, 0, 255]);
+  // Convert frame to grayscale
+  cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
+  
+  // Convert grayscale to RGBA
+  cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
+
+  // Copy the original frame to dst only where the mask is non-zero
   frame.copyTo(dst, fgmask);
+  
   cv.imshow('canvasOutput', dst);
 
   stats.end();
