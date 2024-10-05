@@ -25,12 +25,9 @@ function startCamera() {
   navigator.mediaDevices.enumerateDevices()
     .then(function(devices) {
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      if (videoDevices.length < 2) {
-        throw new Error('Second camera not found');
-      }
       return navigator.mediaDevices.getUserMedia({
         video: {
-          deviceId: { exact: videoDevices[1].deviceId },
+          deviceId: { exact: videoDevices[videoDevices.length - 1].deviceId },
           ...resolution
         },
         audio: false
