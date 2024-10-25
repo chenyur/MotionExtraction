@@ -130,6 +130,8 @@ function processVideo() {
     cap.read(frame);
   }
 
+  dst = cv.Mat.zeros(video.height, video.width, cv.CV_8UC3);
+
   // extract green court and dilate
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
   cv.inRange(hsv, lower, upper, mask);
@@ -146,25 +148,44 @@ function processVideo() {
 
   // edge detect court lines only on green part
   cv.Canny(gry, cny, 50, 200, 3);
+  cv.bitwise_and(cny, dil, cny);
   cv.bitwise_and(mask, dil, bin);
   // red.copyTo(dst, mask); // draw mask
-  // cny.copyTo(dst, mask); // draw canny edges
+  // cny.copyTo(dst);
 
   // find contours
   let contours = new cv.MatVector();
   let hierarchy = new cv.Mat();
   cv.findContours(bin, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
-  dst = cv.Mat.zeros(video.height, video.width, cv.CV_8UC3);
+
+  let poly = new cv.MatVector();
+  for (let i = 0; i < contours.size(); ++i) {
+    let tmp = new cv.Mat();
+    let cnt = contours.get(i);
+
+
+
+    // You can try more different parameters
+    cv.approxPolyDP(cnt, tmp, 5, true);
+    // cv.convexHull(cnt, tmp, false, true);
+
+
+
+    poly.push_back(tmp);
+    cnt.delete(); tmp.delete();
+  }
+
+
   // draw contours
   console.log(contours.size());
-  for (let i = 0; i < contours.size(); ++i) {
+  for (let i = 0; i < poly.size(); ++i) {
     let color = new cv.Scalar(128 + Math.round(Math.random() * 127),
                               128 + Math.round(Math.random() * 127),
                               128 + Math.round(Math.random() * 127));
     area = cv.contourArea(contours.get(i));
     if (area > 1000) {
-      cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
+      cv.drawContours(dst, poly, i, color, 1, cv.LINE_8, hierarchy, 100);
     }
   }
 
