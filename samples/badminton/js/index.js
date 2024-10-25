@@ -1,3 +1,5 @@
+let stopped = true;
+
 let videoWidth, videoHeight;
 
 let qvga = {width: {exact: 320}, height: {exact: 240}};
@@ -14,7 +16,41 @@ let canvasOutput = document.getElementById('canvasOutput');
 let canvasOutputCtx = canvasOutput.getContext('2d');
 let stream = null;
 
+let canvasInput = document.getElementById('canvasInput');
+let canvasInputCtx = canvasInput.getContext('2d');
+
 let info = document.getElementById('info');
+
+let canvasBuffer = null;
+let canvasBufferCtx = null;
+
+let src = null;
+let gry = null;
+let dst = null;
+
+let cap = null;
+
+let frame = null;
+let mask = null;
+let fgbg = null;
+
+let lower = null;
+let upper = null;
+let kernel = null;
+let hsv = null;
+let cny = null;
+let red = null;
+
+function loadImage() {
+  const img = new Image();
+
+  img.addEventListener("load", () => {
+    canvasInputCtx.drawImage(img, -130, 0);
+    startCamera();
+  });
+
+  img.src = "../images/paris.jpeg";
+}
 
 function startCamera() {
   if (streaming) return;
@@ -52,36 +88,9 @@ function startCamera() {
   }, false);
 }
 
-let canvasInput = null;
-let canvasInputCtx = null;
-
-let canvasBuffer = null;
-let canvasBufferCtx = null;
-
-let src = null;
-let gry = null;
-let dst = null;
-
-let cap = null;
-
-let frame = null;
-let mask = null;
-let fgbg = null;
-
-let lower = null;
-let upper = null;
-let kernel = null;
-let hsv = null;
-let cny = null;
-let red = null;
-
 function startVideoProcessing() {
   if (!streaming) { console.warn("Please startup your webcam"); return; }
   stopVideoProcessing();
-  canvasInput = document.createElement('canvas');
-  canvasInput.width = videoWidth;
-  canvasInput.height = videoHeight;
-  canvasInputCtx = canvasInput.getContext('2d');
 
   canvasBuffer = document.createElement('canvas');
   canvasBuffer.width = videoWidth;
@@ -113,7 +122,11 @@ function startVideoProcessing() {
 function processVideo() {
   stats.begin();
 
-  cap.read(frame);
+  if (stopped) {
+    frame = cv.imread('canvasInput');
+  } else {
+    cap.read(frame);
+  }
 
   // extract green court and dilate
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
@@ -144,7 +157,7 @@ function processVideo() {
   cv.imshow('canvasOutput', dst);  // Changed from cny to dst
 
   stats.end();
-  requestAnimationFrame(processVideo);
+  if (!stopped) requestAnimationFrame(processVideo);
 }
 
 function stopVideoProcessing() {
@@ -175,5 +188,6 @@ function opencvIsReady() {
   }
   info.innerHTML = '';
   initUI();
-  startCamera();
+  loadImage();
+  // startCamera();
 }
