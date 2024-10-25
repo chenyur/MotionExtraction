@@ -135,23 +135,30 @@ function processVideo() {
 
   // overlay detected green court over grayscaled background
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
-  cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA);
-  frame.copyTo(dst, mask);
+
+  // cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA); // draw grayscale background
+  // frame.copyTo(dst, mask); // draw highlighted badminton field
 
   // edge detect court lines only on green part
   cv.Canny(gry, cny, 50, 200, 3);
   cv.bitwise_and(cny, mask, cny);
-  red.copyTo(dst, cny);
+  // red.copyTo(dst, mask); // draw mask
+  // cny.copyTo(dst, mask); // draw canny edges
 
   // find contours
   let contours = new cv.MatVector();
   let hierarchy = new cv.Mat();
   cv.findContours(cny, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
+  dst = cv.Mat.zeros(video.height, video.width, cv.CV_8UC3);
   // draw contours
   let color = new cv.Scalar(255, 0, 0);
+  console.log(contours.size());
   for (let i = 0; i < contours.size(); ++i) {
-    cv.drawContours(dst, contours, i, color, 2, cv.LINE_8, hierarchy, 100);
+    let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+                              Math.round(Math.random() * 255));
+    console.log(color)
+    cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
   }
 
   cv.imshow('canvasOutput', dst);  // Changed from cny to dst
