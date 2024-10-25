@@ -130,6 +130,17 @@ function processVideo() {
   cv.bitwise_and(cny, mask, cny);
   red.copyTo(dst, cny);
 
+  // find contours
+  let contours = new cv.MatVector();
+  let hierarchy = new cv.Mat();
+  cv.findContours(cny, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+
+  // draw contours
+  let color = new cv.Scalar(255, 0, 0);
+  for (let i = 0; i < contours.size(); ++i) {
+    cv.drawContours(dst, contours, i, color, 2, cv.LINE_8, hierarchy, 100);
+  }
+
   cv.imshow('canvasOutput', dst);  // Changed from cny to dst
 
   stats.end();
