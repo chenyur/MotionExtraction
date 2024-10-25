@@ -104,7 +104,9 @@ function startVideoProcessing() {
 
   fgbg = new cv.BackgroundSubtractorMOG2(500, 16, true);
 
+  dil = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   gry = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+  bin = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   cny = new cv.Mat(video.height, video.width, cv.CV_8UC1);
   dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
@@ -131,34 +133,39 @@ function processVideo() {
   // extract green court and dilate
   cv.cvtColor(frame, hsv, cv.COLOR_BGR2HSV);
   cv.inRange(hsv, lower, upper, mask);
-  cv.dilate(mask, mask, kernel);
+
+  cv.dilate(mask, dil, kernel);
 
   // overlay detected green court over grayscaled background
   cv.cvtColor(frame, gry, cv.COLOR_RGBA2GRAY);
 
-  // cv.cvtColor(gry, dst, cv.COLOR_GRAY2RGBA); // draw grayscale background
+  cv.threshold(gry, bin, 200, 255, cv.THRESH_BINARY);
+  cv.bitwise_not(bin, bin);
+
   // frame.copyTo(dst, mask); // draw highlighted badminton field
 
   // edge detect court lines only on green part
   cv.Canny(gry, cny, 50, 200, 3);
-  cv.bitwise_and(cny, mask, cny);
+  cv.bitwise_and(mask, dil, bin);
   // red.copyTo(dst, mask); // draw mask
   // cny.copyTo(dst, mask); // draw canny edges
 
   // find contours
   let contours = new cv.MatVector();
   let hierarchy = new cv.Mat();
-  cv.findContours(cny, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+  cv.findContours(bin, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
   dst = cv.Mat.zeros(video.height, video.width, cv.CV_8UC3);
   // draw contours
-  let color = new cv.Scalar(255, 0, 0);
   console.log(contours.size());
   for (let i = 0; i < contours.size(); ++i) {
-    let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
-                              Math.round(Math.random() * 255));
-    console.log(color)
-    cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
+    let color = new cv.Scalar(128 + Math.round(Math.random() * 127),
+                              128 + Math.round(Math.random() * 127),
+                              128 + Math.round(Math.random() * 127));
+    area = cv.contourArea(contours.get(i));
+    if (area > 1000) {
+      cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
+    }
   }
 
   cv.imshow('canvasOutput', dst);  // Changed from cny to dst
